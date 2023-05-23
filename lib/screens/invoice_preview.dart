@@ -1,13 +1,12 @@
-import 'package:billing_app/models/customer_model.dart';
-import 'package:billing_app/models/invoice_model.dart';
-import 'package:billing_app/screens/item_purchase_form.dart';
-import 'package:billing_app/screens/item_sell_form.dart';
-import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:syncfusion_flutter_datagrid/datagrid.dart';
-
+import 'package:flutter/material.dart';
 import '../models/receivable_model.dart';
 import '../service/database_service.dart';
+import 'package:billing_app/models/invoice_model.dart';
+import 'package:billing_app/models/customer_model.dart';
+import 'package:billing_app/screens/item_sell_form.dart';
+import 'package:syncfusion_flutter_datagrid/datagrid.dart';
+import 'package:billing_app/screens/item_purchase_form.dart';
 
 final formatter = NumberFormat('#,##0.00', 'en_US');
 
@@ -60,29 +59,28 @@ class _InvoicePreviewState extends State<InvoicePreview> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          title: const Text('Preview'),
-          actions: <Widget>[
-            IconButton(
-              onPressed: () {
-                Navigator.pop(context);
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (_) => ItemForm(customer: widget.customer)));
-              },
-              icon: const Icon(Icons.add, size: 30),
-            ),
-          ],
-        ),
-        body: SingleChildScrollView(
-            child: Container(
-          padding: const EdgeInsets.all(10),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text("Issued: ", style: TextStyle(fontSize: 18)),
-              const SizedBox(height: 10),
+      appBar: AppBar(
+        title: const Text('Preview'),
+        actions: <Widget>[
+          IconButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) => ItemForm(customer: widget.customer)));
+            },
+            icon: const Icon(Icons.add, size: 30),
+          ),
+        ],
+      ),
+      body: 
+      // SingleChildScrollView(
+      //     child: Column(
+      //       crossAxisAlignment: CrossAxisAlignment.start,
+      //       children: [
+      //         const Text("Issued: ", style: TextStyle(fontSize: 18)),
+      //         const SizedBox(height: 10),
               SfDataGrid(
                 onQueryRowHeight: (details) {
                   if (details.rowIndex == 0) {
@@ -107,8 +105,8 @@ class _InvoicePreviewState extends State<InvoicePreview> {
                                       .showSnackBar(const SnackBar(
                                     content: Text("Successfully Deleted!"),
                                     duration: Duration(seconds: 2),
-                                  behavior: SnackBarBehavior.floating,
-                                  margin: EdgeInsets.all(20),
+                                    behavior: SnackBarBehavior.floating,
+                                    margin: EdgeInsets.all(20),
                                   ))
                                 });
                         _employeeDataGridSource.dataGridRows.removeAt(rowIndex);
@@ -123,30 +121,30 @@ class _InvoicePreviewState extends State<InvoicePreview> {
                 columns: [
                   GridColumn(
                       columnName: 'item',
-                      columnWidthMode: ColumnWidthMode.none,
-                      minimumWidth: 200,
+                      minimumWidth: 140,
                       label: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
                           alignment: Alignment.centerLeft,
                           child: const Text('ITEM'))),
                   GridColumn(
-                      columnName: 'silver',
-                      columnWidthMode: ColumnWidthMode.fitByColumnName,
+                      columnName: 'gross',
                       label: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
                           alignment: Alignment.centerLeft,
-                          child: const Text(
-                            'FINE SILVER (gm)',
-                          ))),
+                          child: const Text('G'))),
+                  GridColumn(
+                      columnName: 'netWeight',
+                      label: Container(
+                          alignment: Alignment.centerLeft,
+                          child: const Text('NET'))),
+                  GridColumn(
+                      columnName: 'silver',
+                      label: Container(
+                          alignment: Alignment.centerLeft,
+                          child: const Text('F'))),
                   GridColumn(
                       columnName: 'labour',
-                      columnWidthMode: ColumnWidthMode.fitByColumnName,
                       label: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
                           alignment: Alignment.centerLeft,
-                          child: const Text(
-                            'LABOUR AMOUNT (Rs.)',
-                          ))),
+                          child: const Text('L'))),
                 ],
                 onSelectionChanged: (List<DataGridRow> addedRows,
                     List<DataGridRow> removedRows) {
@@ -175,106 +173,109 @@ class _InvoicePreviewState extends State<InvoicePreview> {
                   }
                 },
               ),
-              const SizedBox(height: 30),
-              receivableList.isNotEmpty
-                  ? const Text("Receivable: ", style: TextStyle(fontSize: 18))
-                  : const SizedBox(height: 0),
-              const SizedBox(height: 10),
-              SfDataGrid(
-                onQueryRowHeight: (details) {
-                  if (details.rowIndex == 0) {
-                    return 0;
-                  }
-                  return details.getIntrinsicRowHeight(details.rowIndex);
-                },
-                isScrollbarAlwaysShown: true,
-                headerRowHeight: 0,
-                source: _receivableDataGridSource,
-                controller: _receivabledataGridController,
-                selectionMode: SelectionMode.singleDeselect,
-                allowSwiping: true,
-                swipeMaxOffset: 80.0,
-                endSwipeActionsBuilder:
-                    (BuildContext context, DataGridRow row, int rowIndex) {
-                  return GestureDetector(
-                      onTap: () async {
-                        await DatabaseService.instance
-                            .deleteRecevable(
-                                receivableList[rowIndex].receivableId!)
-                            .then((value) => {
-                                  ScaffoldMessenger.of(context)
-                                      .showSnackBar(const SnackBar(
-                                    content: Text("Successfully Deleted!"),
-                                    duration: Duration(seconds: 2),
-                                  behavior: SnackBarBehavior.floating,
-                                  margin: EdgeInsets.all(20),
-                                  ))
-                                });
-                        _receivableDataGridSource.dataGridRows
-                            .removeAt(rowIndex);
-                        _receivableDataGridSource.updateDataGridSource();
-                      },
-                      child: Container(
-                          color: const Color.fromARGB(255, 228, 57, 45),
-                          child: const Center(
-                            child: Icon(Icons.delete),
-                          )));
-                },
-                columns: [
-                  GridColumn(
-                      columnName: 'item',
-                      columnWidthMode: ColumnWidthMode.none,
-                      minimumWidth: 200,
-                      label: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                          alignment: Alignment.centerLeft,
-                          child: const Text('ITEM'))),
-                  GridColumn(
-                      columnName: 'silver',
-                      columnWidthMode: ColumnWidthMode.fitByColumnName,
-                      label: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                          alignment: Alignment.centerLeft,
-                          child: const Text('FINE SILVER (gm)'))),
-                  GridColumn(
-                      columnName: 'labour',
-                      columnWidthMode: ColumnWidthMode.fitByColumnName,
-                      label: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                          alignment: Alignment.centerLeft,
-                          child: const Text('LABOUR AMOUNT (Rs.)'))),
-                ],
-                onSelectionChanged: (List<DataGridRow> addedRows,
-                    List<DataGridRow> removedRows) {
-                  if (addedRows.isNotEmpty) {
-                    if (_dataGridController.selectedRow != null) {
-                      _dataGridController.selectedRow = null;
-                    }
-                    index = _receivableDataGridSource.dataGridRows
-                        .indexOf(addedRows.last);
+              // receivableList.isNotEmpty
+              //     ? const Text("Receivable: ", style: TextStyle(fontSize: 18))
+              //     : const SizedBox(height: 0),
+              // SfDataGrid(
+              //   onQueryRowHeight: (details) {
+              //     if (details.rowIndex == 0) {
+              //       return 0;
+              //     }
+              //     return details.getIntrinsicRowHeight(details.rowIndex);
+              //   },
+              //   isScrollbarAlwaysShown: true,
+              //   headerRowHeight: 0,
+              //   source: _receivableDataGridSource,
+              //   controller: _receivabledataGridController,
+              //   selectionMode: SelectionMode.singleDeselect,
+              //   allowSwiping: true,
+              //   swipeMaxOffset: 80.0,
+              //   endSwipeActionsBuilder:
+              //       (BuildContext context, DataGridRow row, int rowIndex) {
+              //     return GestureDetector(
+              //         onTap: () async {
+              //           await DatabaseService.instance
+              //               .deleteRecevable(
+              //                   receivableList[rowIndex].receivableId!)
+              //               .then((value) => {
+              //                     ScaffoldMessenger.of(context)
+              //                         .showSnackBar(const SnackBar(
+              //                       content: Text("Successfully Deleted!"),
+              //                       duration: Duration(seconds: 2),
+              //                     behavior: SnackBarBehavior.floating,
+              //                     margin: EdgeInsets.all(20),
+              //                     ))
+              //                   });
+              //           _receivableDataGridSource.dataGridRows
+              //               .removeAt(rowIndex);
+              //           _receivableDataGridSource.updateDataGridSource();
+              //         },
+              //         child: Container(
+              //             color: const Color.fromARGB(255, 228, 57, 45),
+              //             child: const Center(
+              //               child: Icon(Icons.delete),
+              //             )));
+              //   },
+              //   columns: [
+              //     GridColumn(
+              //         columnName: 'item',
+              //         minimumWidth: 140,
+              //         label: Container(
+              //             alignment: Alignment.centerLeft,
+              //             child: const Text('ITEM'))),
+              //     GridColumn(
+              //         columnName: 'gross',
+              //         label: Container(
+              //             alignment: Alignment.centerLeft,
+              //             child: const Text('G'))),
+              //     GridColumn(
+              //         columnName: 'netWeight',
+              //         label: Container(
+              //             alignment: Alignment.centerLeft,
+              //             child: const Text('NET'))),
+              //     GridColumn(
+              //         columnName: 'silver',
+              //         label: Container(
+              //             alignment: Alignment.centerLeft,
+              //             child: const Text('F'))),
+              //     GridColumn(
+              //         columnName: 'labour',
+              //         label: Container(
+              //             alignment: Alignment.centerLeft,
+              //             child: const Text('L'))),
+              //   ],
+              //   onSelectionChanged: (List<DataGridRow> addedRows,
+              //       List<DataGridRow> removedRows) {
+              //     if (addedRows.isNotEmpty) {
+              //       if (_dataGridController.selectedRow != null) {
+              //         _dataGridController.selectedRow = null;
+              //       }
+              //       index = _receivableDataGridSource.dataGridRows
+              //           .indexOf(addedRows.last);
 
-                    Navigator.pop(context);
-                    _dataGridController.selectedRow == null
-                        ? Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (_) => ItemPurchaseForm(
-                                      customer: widget.customer,
-                                      editItem: receivableList[index],
-                                    )))
-                        : Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (_) => ItemForm(
-                                      customer: widget.customer,
-                                      editItem: _employees[index],
-                                    )));
-                  }
-                },
-              ),
-            ],
-          ),
-        )));
+              //       Navigator.pop(context);
+              //       _dataGridController.selectedRow == null
+              //           ? Navigator.push(
+              //               context,
+              //               MaterialPageRoute(
+              //                   builder: (_) => ItemPurchaseForm(
+              //                         customer: widget.customer,
+              //                         editItem: receivableList[index],
+              //                       )))
+              //           : Navigator.push(
+              //               context,
+              //               MaterialPageRoute(
+              //                   builder: (_) => ItemForm(
+              //                         customer: widget.customer,
+              //                         editItem: _employees[index],
+              //                       )));
+              //     }
+              //   },
+              // ),
+            // ],
+          );
+      //   ),
+      // );
   }
 }
 
@@ -286,8 +287,15 @@ class EmployeeDataGridSource extends DataGridSource {
                 DataGridCell<String>(
                   columnName: 'item',
                   value:
-                      "${e.itemName} \nT${e.itemRate}${e.labourPerPc == null && e.labourPerKg == null ? "" : e.labourPerPc == null ? ', ${e.labourPerKg!.toInt()}/kg' : ', ${e.noOfPc}@${e.labourPerPc!.toInt()}p'}\nGross: ${e.itemWeight!.toInt()} g${e.polyWeight!.isEmpty ? "" : '\npp: ${e.polyWeight}'}",
+                      "${e.itemName}\nT${e.itemRate}${e.labourInString!.isEmpty ? "" : '\n${e.labourInString}'}${e.polyWeight!.isEmpty ? "" : '\npp: ${e.polyWeight}'}",
                 ),
+                DataGridCell<String>(
+                    columnName: 'gross',
+                    value: e.itemWeight!.round().toString()),
+                DataGridCell<String>(
+                    columnName: 'netWeight',
+                    value:
+                        "${(e.itemWeight!.round() - e.polyWeightinGm!.round())}"),
                 DataGridCell<String>(
                     columnName: 'silver', value: e.fineSilver.toString()),
                 DataGridCell<String>(
@@ -308,7 +316,7 @@ class EmployeeDataGridSource extends DataGridSource {
         cells: row.getCells().map<Widget>((dataGridCell) {
       return Container(
           alignment: Alignment.centerLeft,
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          padding: const EdgeInsets.symmetric(horizontal: 6.0),
           child: Text(
             dataGridCell.value.toString(),
             overflow: TextOverflow.visible,
@@ -329,8 +337,14 @@ class ReceivableData extends DataGridSource {
                 DataGridCell<String>(
                   columnName: 'item',
                   value:
-                      "${e.itemName}, \nT${e.itemRate}${e.labourPerPc == null && e.labourPerKg == null ? "" : e.labourPerPc == null ? ', ${e.labourPerKg!.toInt()}/kg' : ', ${e.noOfPc}@${e.labourPerPc!.toInt()}p'}\nGross: ${e.itemWeight!.toInt()} g",
+                      "${e.itemName}, \nT${e.itemRate}${e.labourPerPc == null && e.labourPerKg == null ? "" : e.labourPerPc == null ? ', ${e.labourPerKg!.round()}/kg' : ', ${e.noOfPc}@${e.labourPerPc!.round()}p'}",
                 ),
+                DataGridCell<String>(
+                    columnName: 'gross',
+                    value: e.itemWeight!.round().toString()),
+                DataGridCell<String>(
+                    columnName: 'netWeight',
+                    value: e.itemWeight!.round().toString()),
                 DataGridCell<String>(
                     columnName: 'silver', value: e.fineSilver.toString()),
                 DataGridCell<String>(
@@ -351,7 +365,7 @@ class ReceivableData extends DataGridSource {
         cells: row.getCells().map<Widget>((dataGridCell) {
       return Container(
           alignment: Alignment.centerLeft,
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          padding: const EdgeInsets.symmetric(horizontal: 6.0),
           child: Text(
             dataGridCell.value.toString(),
             overflow: TextOverflow.visible,

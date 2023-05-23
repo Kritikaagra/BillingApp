@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 import 'package:billing_app/models/customer_model.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -35,20 +36,20 @@ Future<Uint8List> generateInvoice(CustomerModel customer) async {
   double totalItemWeightForSell = invoiceDetails.fold(
     0.00,
     (double accumulator, InvoiceModel invoice) =>
-        accumulator + invoice.itemWeight!.toDouble(),
+        accumulator + invoice.itemWeight!.round(),
   );
   int totalNetItemWeightForSell = invoiceDetails.fold(
     0,
     (int accumulator, InvoiceModel invoice) =>
-        accumulator + (invoice.itemWeight! - invoice.polyWeightinGm!).toInt(),
+        accumulator +
+        (invoice.itemWeight!.round() - invoice.polyWeightinGm!.round()),
   );
 
   //for receivable
-
   double totalItemWeightForReceivable = receivableItems.fold(
     0.00,
     (double accumulator, ItemPurchaseModel invoice) =>
-        accumulator + invoice.itemWeight!.toDouble(),
+        accumulator + invoice.itemWeight!.round(),
   );
   int totalFineSilverReceivable = receivableItems.fold(
     0,
@@ -64,36 +65,36 @@ Future<Uint8List> generateInvoice(CustomerModel customer) async {
 //add row in nesdted list
   myNestedListForSell = invoiceDetails
       .map((e) => [
-            "${e.itemName}\nT${e.itemRate}${e.labourPerPc == null && e.labourPerKg == null ? "" : e.labourPerPc == null ? ', ${e.labourPerKg!.toInt()}/kg' : ', ${e.noOfPc}@${e.labourPerPc!.toInt()}p'}\n${e.polyWeight!.isEmpty ? "" : 'pp:${e.polyWeight}'}",
-            e.itemWeight!.toInt(),
-            "${(e.itemWeight! - e.polyWeightinGm!).toInt()}",
+            "${e.itemName}\nT${e.itemRate}${e.labourInString!.isEmpty ? "" : '\n${e.labourInString}'}${e.polyWeight!.isEmpty ? "" : '\npp:${e.polyWeight}'}",
+            e.itemWeight!.round(),
+            "${(e.itemWeight!.round() - e.polyWeightinGm!.round())}",
             e.fineSilver,
             e.labourNet
           ].map((obj) => obj?.toString() ?? '').toList())
       .toList();
   myNestedListForSell?.add([
     "TOTAL",
-    totalItemWeightForSell.toInt().toString(),
-    totalNetItemWeightForSell.abs().toString(),
-    totalFineSilverSell.abs().toString(),
-    totalLabourAmountForSell.abs().toString()
+    totalItemWeightForSell.round().toString(),
+    totalNetItemWeightForSell.toString(),
+    totalFineSilverSell.toString(),
+    totalLabourAmountForSell.toString()
   ]);
 
   myNestedListForReceivableItems = receivableItems
       .map((e) => [
-            "${e.itemName}\nT${e.itemRate}${e.labourPerPc == null && e.labourPerKg == null ? "" : e.labourPerPc == null ? ', ${e.labourPerKg!.toInt()}/kg' : ', ${e.noOfPc}@${e.labourPerPc!.toInt()}p'}",
-            e.itemWeight!.toInt(),
-            e.itemWeight!.toInt(),
+            "${e.itemName}\nT${e.itemRate}\n${e.labourPerPc == null && e.labourPerKg == null ? "" : e.labourPerPc == null ? ', ${e.labourPerKg!.round()}/kg' : ', ${e.noOfPc}@${e.labourPerPc!.round()}p'}",
+            e.itemWeight!.round(),
+            e.itemWeight!.round(),
             e.fineSilver,
             e.labourNet
           ].map((obj) => obj?.toString() ?? '').toList())
       .toList();
   myNestedListForReceivableItems?.add([
     "TOTAL",
-    totalItemWeightForReceivable.toInt().toString(),
-    totalItemWeightForReceivable.toInt().toString(),
-    totalFineSilverReceivable.abs().toString(),
-    totalLabourAmountForReceivable.abs().toString()
+    totalItemWeightForReceivable.round().toString(),
+    totalItemWeightForReceivable.round().toString(),
+    totalFineSilverReceivable.toString(),
+    totalLabourAmountForReceivable.toString()
   ]);
 
   final pdf = pw.Document();
@@ -126,10 +127,9 @@ Future<Uint8List> generateInvoice(CustomerModel customer) async {
               _buildTotalValues(
                   context,
                   customer,
-                  (totalItemWeightForSell - totalItemWeightForReceivable).abs(),
-                  (totalFineSilverSell - totalFineSilverReceivable).abs(),
-                  (totalLabourAmountForSell - totalLabourAmountForReceivable)
-                      .abs()),
+                  (totalItemWeightForSell),
+                  (totalFineSilverSell - totalFineSilverReceivable),
+                  (totalLabourAmountForSell - totalLabourAmountForReceivable)),
             ],
           ),
         ),
@@ -151,7 +151,7 @@ pw.Widget _buildHeader(pw.Context context, CustomerModel customer) {
         ),
         pw.Container(
           child: pw.Text(
-              "Silver Rate : Rs. ${customer.silverRate!.toInt()} /kg",
+              "Silver Rate : Rs. ${customer.silverRate!.round()} /kg",
               style: const pw.TextStyle(fontSize: 10)),
         ),
         pw.Container(
@@ -174,69 +174,64 @@ pw.Widget _contentIssueTable(
     'F',
     'L',
   ];
+  
+  pw.Table issuedTable = pw.Table.fromTextArray(
+      border: const pw.TableBorder(
+        verticalInside: pw.BorderSide(
+          color: PdfColors.grey,
+          width: 0.5,
+        ),
+        horizontalInside: pw.BorderSide(
+          color: PdfColors.grey,
+          width: 0.5,
+        ),
+        left: pw.BorderSide(color: PdfColors.grey, width: 0.5),
+        right: pw.BorderSide(color: PdfColors.grey, width: 0.5),
+        bottom: pw.BorderSide(color: PdfColors.grey, width: 0.5),
+      ),
+      columnWidths: {
+        0: const pw.FixedColumnWidth(14),
+        1: const pw.FixedColumnWidth(6),
+        2: const pw.FixedColumnWidth(6),
+        3: const pw.FixedColumnWidth(6),
+        4: const pw.FixedColumnWidth(8),
+      },
+      tableWidth: pw.TableWidth.max,
+      cellAlignment: pw.Alignment.centerLeft,
+      headerDecoration: const pw.BoxDecoration(
+          border: pw.TableBorder(
+        top: pw.BorderSide(color: PdfColors.grey, width: 0.5),
+      )),
+      cellAlignments: {
+        0: pw.Alignment.centerLeft,
+        1: pw.Alignment.centerLeft,
+        2: pw.Alignment.centerLeft,
+        3: pw.Alignment.centerLeft,
+        4: pw.Alignment.centerLeft,
+      },
+      headerStyle: const pw.TextStyle(
+        color: PdfColors.black,
+        fontSize: 9,
+      ),
+      cellStyle: const pw.TextStyle(
+        color: PdfColors.black,
+        fontSize: 10,
+      ),
+      headers: List<String>.generate(
+        tableHeaders.length,
+        (col) => tableHeaders[col],
+      ),
+      data: myNestedListForSell!);
+
   return invoiceDetails.isEmpty
       ? pw.Container(height: 0)
       : pw.Container(
-          child: pw.Column(children: [
-            pw.Table.fromTextArray(
-                border: const pw.TableBorder(
-                  verticalInside: pw.BorderSide(
-                    color: PdfColors.grey,
-                    width: 0.5,
-                  ),
-                  horizontalInside: pw.BorderSide(
-                    color: PdfColors.grey,
-                    width: 0.5,
-                  ),
-                  left: pw.BorderSide(color: PdfColors.grey, width: 0.5),
-                  right: pw.BorderSide(color: PdfColors.grey, width: 0.5),
-                  bottom: pw.BorderSide(color: PdfColors.grey, width: 0.5),
-                ),
-                columnWidths: {
-                  0: const pw.FixedColumnWidth(14),
-                  1: const pw.FixedColumnWidth(7),
-                  2: const pw.FixedColumnWidth(7),
-                  3: const pw.FixedColumnWidth(7),
-                  4: const pw.FixedColumnWidth(7),
-                },
-                tableWidth: pw.TableWidth.max,
-                cellAlignment: pw.Alignment.centerLeft,
-                headerDecoration: const pw.BoxDecoration(
-                    border: pw.TableBorder(
-                  top: pw.BorderSide(color: PdfColors.grey, width: 0.5),
-                )),
-                cellAlignments: {
-                  0: pw.Alignment.centerLeft,
-                  1: pw.Alignment.centerLeft,
-                  2: pw.Alignment.centerLeft,
-                  3: pw.Alignment.centerLeft,
-                  4: pw.Alignment.centerLeft,
-                },
-                headerStyle: const pw.TextStyle(
-                  color: PdfColors.black,
-                  fontSize: 9,
-                ),
-                cellStyle: const pw.TextStyle(
-                  color: PdfColors.black,
-                  fontSize: 10,
-                ),
-                headers: List<String>.generate(
-                  tableHeaders.length,
-                  (col) => tableHeaders[col],
-                ),
-                data: myNestedListForSell!)
-          ]),
+          child: issuedTable,
         );
 }
 
 pw.Widget _contentReceivableTable(
     pw.Context context, List<ItemPurchaseModel> itemPurchasedList) {
-  // const tableHeaders = [
-  //   'ITEM',
-  //   'GROSS',
-  //   'FINE',
-  //   'LAB.',
-  // ];
   return itemPurchasedList.isEmpty
       ? pw.Container(height: 0)
       : pw.Container(
@@ -258,10 +253,10 @@ pw.Widget _contentReceivableTable(
                 tableWidth: pw.TableWidth.max,
                 columnWidths: {
                   0: const pw.FixedColumnWidth(14),
-                  1: const pw.FixedColumnWidth(7),
-                  2: const pw.FixedColumnWidth(7),
-                  3: const pw.FixedColumnWidth(7),
-                  4: const pw.FixedColumnWidth(7),
+                  1: const pw.FixedColumnWidth(6),
+                  2: const pw.FixedColumnWidth(6),
+                  3: const pw.FixedColumnWidth(6),
+                  4: const pw.FixedColumnWidth(8),
                 },
                 cellAlignment: pw.Alignment.centerLeft,
                 headerDecoration: const pw.BoxDecoration(
@@ -283,10 +278,6 @@ pw.Widget _contentReceivableTable(
                   color: PdfColors.black,
                   fontSize: 10,
                 ),
-                // headers: List<String>.generate(
-                //   tableHeaders.length,
-                //   (col) => tableHeaders[col],
-                // ),
                 data: myNestedListForReceivableItems!),
             pw.SizedBox(height: 10),
           ]),
@@ -316,7 +307,7 @@ pw.Widget _buildTotalValues(pw.Context context, CustomerModel customer,
     pw.SizedBox(height: 5),
     pw.Container(
       child: pw.Text(
-          "Net Amount : Rs. ${formatterNum.format((totalFineSilver * (customer.silverRate! / 1000)).toInt() + (totalLabourAmount))}",
+          "Net Amount : Rs. ${formatterNum.format((totalFineSilver * (customer.silverRate! / 1000)).round() + (totalLabourAmount))}",
           style: const pw.TextStyle(fontSize: 10)),
     ),
   ]));

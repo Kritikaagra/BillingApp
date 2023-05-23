@@ -1,7 +1,8 @@
 import 'package:billing_app/screens/invoice_preview.dart';
 import 'package:billing_app/screens/item_purchase_form.dart';
-import '../models/item_model.dart';
 import 'package:flutter/material.dart';
+import 'package:toggle_switch/toggle_switch.dart';
+import '../models/item_model.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:provider/provider.dart';
 import 'package:printing/printing.dart';
@@ -23,6 +24,15 @@ class _GroupControllers {
   }
 }
 
+class _GroupControllersForLabour {
+  final TextEditingController _netWeightController = TextEditingController();
+  final TextEditingController _labourInKgController = TextEditingController();
+  void dispose() {
+    _netWeightController.dispose();
+    _labourInKgController.dispose();
+  }
+}
+
 // ignore: must_be_immutable
 class ItemForm extends StatefulWidget {
   ItemForm({Key? key, required this.customer, this.editItem}) : super(key: key);
@@ -37,6 +47,10 @@ class _ItemFormState extends State<ItemForm> {
   final List<_GroupControllers> _groupControllers = [];
   final List<TextFormField> _polyNoFields = [];
   final List<TextFormField> _polyWtFields = [];
+  final List<_GroupControllersForLabour> _groupControllersLabour = [];
+  final List<TextFormField> _netWeightFields = [];
+  final List<TextFormField> _labourInKgFields = [];
+  final List<int> toggleSwitch = [];
 
   void getAllPolytheneData(String polyWeights) {
     RegExp regex = RegExp(r"([-+]?[0-9]*\.?[0-9]+)@([-+]?[0-9]*\.?[0-9]+)");
@@ -58,14 +72,56 @@ class _ItemFormState extends State<ItemForm> {
     }
   }
 
+  void getAllLabourDataToEdit(String labourDetails) {
+    RegExp regex = RegExp(r"([-+]?[0-9]*\.?[0-9]+)@([-+]?[0-9]*\.?[0-9]+)/kg");
+    Iterable<RegExpMatch> matches = regex.allMatches(labourDetails);
+
+    for (int i = 0 ; i < matches.length; i++) {
+      RegExpMatch match = matches.elementAt(i);
+      if(i>0) _addTilesForLabour();
+      _groupControllersLabour[i]._netWeightController.text = match.group(1)!;
+      _groupControllersLabour[i]._labourInKgController.text = match.group(2)!;
+    }
+
+    RegExp regex1 = RegExp(r"([-+]?[0-9]*\.?[0-9]+)@([-+]?[0-9]*\.?[0-9]+)/pc");
+    Iterable<RegExpMatch> matches1 = regex1.allMatches(labourDetails);
+
+    for (int i = 0; i < matches1.length; i++) {
+      RegExpMatch match = matches1.elementAt(i); 
+      if(matches.length+i > 0) _addTilesForLabour();
+      onToggleFunction(1, matches.length + i);
+      _groupControllersLabour[matches.length + i]._netWeightController.text = match.group(1)!;
+      _groupControllersLabour[matches.length + i]._labourInKgController.text = match.group(2)!;
+      
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     fetchSimilarItem();
 
+    final groupLabour = _GroupControllersForLabour();
+
+    final netWeightField = _generateTextFieldForLabour(
+        groupLabour._netWeightController, "Net Weight");
+    final labourField = _generateTextFieldForLabour(
+        groupLabour._labourInKgController, "Labour (/kg)");
+
+    setState(() {
+      toggleSwitch.add(0);
+      _groupControllersLabour.add(groupLabour);
+      _netWeightFields.add(netWeightField);
+      _labourInKgFields.add(labourField);
+    });
+
     if (widget.editItem != null) {
       if (widget.editItem!.polyWeight!.isNotEmpty) {
         getAllPolytheneData(widget.editItem!.polyWeight!);
+      }
+
+      if (widget.editItem!.labourInString!.isNotEmpty) {
+        getAllLabourDataToEdit(widget.editItem!.labourInString!);
       }
 
       itemNameController.text = widget.editItem!.itemName.toString();
@@ -83,6 +139,8 @@ class _ItemFormState extends State<ItemForm> {
         isNoOfPcIsVisible = true;
       }
     }
+
+    
   }
 
   void _addTileOnPressedFunction() {
@@ -133,18 +191,124 @@ class _ItemFormState extends State<ItemForm> {
     }
   }
 
+  void _addTilesForLabour() {
+    if (_groupControllersLabour.isNotEmpty) {
+      if (_groupControllersLabour[_groupControllersLabour.length - 1]
+              ._netWeightController
+              .text
+              .isNotEmpty &&
+          _groupControllersLabour[_groupControllersLabour.length - 1]
+              ._labourInKgController
+              .text
+              .isNotEmpty) {
+        isErrorVisibleForLabour = false;
+        final groupLabour = _GroupControllersForLabour();
+
+        final netWeightField = _generateTextFieldForLabour(
+            groupLabour._netWeightController, "Net Weight");
+        final labourField = _generateTextFieldForLabour(
+            groupLabour._labourInKgController, "Labour (/kg)");
+
+        setState(() {
+          toggleSwitch.add(0);
+          _groupControllersLabour.add(groupLabour);
+          _netWeightFields.add(netWeightField);
+          _labourInKgFields.add(labourField);
+        });
+      } else {
+        setState(() {
+          isErrorVisibleForLabour = true;
+        });
+      }
+    } else {
+      isErrorVisibleForLabour = false;
+      final groupLabour = _GroupControllersForLabour();
+
+      final netWeightField = _generateTextFieldForLabour(
+          groupLabour._netWeightController, "Net Weight");
+      final labourField = _generateTextFieldForLabour(
+          groupLabour._labourInKgController, "Labour (/kg)");
+
+      setState(() {
+        toggleSwitch.add(0);
+        _groupControllersLabour.add(groupLabour);
+        _netWeightFields.add(netWeightField);
+        _labourInKgFields.add(labourField);
+      });
+    }
+  }
+
   Widget _addTile() {
     return IconButton(
         icon: const Icon(Icons.add_box_rounded),
         onPressed: _addTileOnPressedFunction);
   }
 
+  Widget _addTileForLabour() {
+    return IconButton(
+        icon: const Icon(Icons.add_box_rounded), onPressed: _addTilesForLabour);
+  }
+
   TextFormField _generateTextField(TextEditingController controller) {
     return TextFormField(
+        controller: controller,
+        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        decoration: const InputDecoration(isDense: true),
+        onChanged: (value) => {calculateNetWeight()});
+  }
+
+  TextFormField _generateTextFieldForLabour(
+      TextEditingController controller, String labeltext) {
+    return TextFormField(
       controller: controller,
-      keyboardType: TextInputType.numberWithOptions(decimal: true),
-      decoration: const InputDecoration(isDense: true),
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      decoration: InputDecoration(
+          labelText: labeltext,
+          contentPadding: const EdgeInsets.all(5),
+          border: const OutlineInputBorder()),
     );
+  }
+
+  void onToggleFunction(int index, int i) {
+    if (index == 1) {
+      final groupLabour = _GroupControllersForLabour();
+
+      final netWeightField = _generateTextFieldForLabour(
+          groupLabour._netWeightController, "No of Pc");
+      final labourField = _generateTextFieldForLabour(
+          groupLabour._labourInKgController, "Labour (/pc)");
+
+      setState(() {
+        toggleSwitch.removeAt(i);
+        _groupControllersLabour.removeAt(i);
+        _netWeightFields.removeAt(i);
+        _labourInKgFields.removeAt(i);
+
+        toggleSwitch.insert(i, index);
+        _groupControllersLabour.add(groupLabour);
+        _netWeightFields.insert(i, netWeightField);
+        _labourInKgFields.insert(i, labourField);
+      });
+    } else {
+      final groupLabour = _GroupControllersForLabour();
+
+      final netWeightField = _generateTextFieldForLabour(
+          groupLabour._netWeightController, "Net Weight");
+      final labourField = _generateTextFieldForLabour(
+          groupLabour._labourInKgController, "Labour (/kg)");
+
+      setState(() {
+        toggleSwitch.removeAt(i);
+        _groupControllersLabour.removeAt(i);
+        _netWeightFields.removeAt(i);
+        _labourInKgFields.removeAt(i);
+
+        toggleSwitch.insert(i, index);
+        _groupControllersLabour.add(groupLabour);
+        _netWeightFields.insert(i, netWeightField);
+        _labourInKgFields.insert(i, labourField);
+      });
+    }
   }
 
   Widget _listView() {
@@ -194,6 +358,62 @@ class _ItemFormState extends State<ItemForm> {
     );
   }
 
+  Widget _labourListView() {
+    final children = [
+      for (var i = 0; i < _groupControllersLabour.length; i++)
+        Row(
+          children: <Widget>[
+            ToggleSwitch(
+              minWidth: 50.0,
+              minHeight: 20,
+              activeBgColors: const [
+                [Colors.blue],
+                [Colors.green]
+              ],
+              activeFgColor: Colors.white,
+              inactiveBgColor: const Color.fromARGB(255, 187, 186, 186),
+              inactiveFgColor: Colors.white,
+              initialLabelIndex: toggleSwitch[i],
+              totalSwitches: 2,
+              labels: const ['/Kg', '/Pc'],
+              radiusStyle: true,
+              onToggle: (index) {
+                onToggleFunction(index!, i);
+              },
+            ),
+            const SizedBox(width: 10),
+            Expanded(child: _netWeightFields[i]),
+            const SizedBox(width: 10),
+            Expanded(child: _labourInKgFields[i]),
+            Visibility(
+              visible: i == 0 ? false : true,
+              child: IconButton(
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                icon: const Icon(
+                  Icons.delete,
+                  color: Colors.grey,
+                ),
+                onPressed: () {
+                  setState(() {
+                    _groupControllersLabour.removeAt(i);
+                    _netWeightFields.removeAt(i);
+                    _labourInKgFields.removeAt(i);
+                  });
+                },
+              ),
+            ),
+            const SizedBox(height: 60)
+          ],
+        ),
+    ];
+    return SingleChildScrollView(
+      child: Column(
+        children: children,
+      ),
+    );
+  }
+
   void fetchSimilarItem() {
     Provider.of<ItemChangeNotifier>(context, listen: false)
         .getAllItem()
@@ -203,6 +423,31 @@ class _ItemFormState extends State<ItemForm> {
         allItemData = value;
       });
     });
+  }
+
+  void calculateNetWeight() {
+    double totalPolyWeight = 0;
+    if (polyNumberControler.text.isNotEmpty &&
+        polyWeightController.text.isNotEmpty &&
+        polyWeightController.text != ".") {
+      totalPolyWeight = double.parse(polyNumberControler.text) *
+          double.parse(polyWeightController.text);
+    }
+    for (var i = 0; i < _groupControllers.length; i++) {
+      if (_groupControllers[i]._polyNoController.text.isNotEmpty &&
+          _groupControllers[i]._polyWtController.text.isNotEmpty) {
+        totalPolyWeight +=
+            double.parse(_groupControllers[i]._polyNoController.text) *
+                double.parse(_groupControllers[i]._polyWtController.text);
+      }
+    }
+
+    if (itemWeightController.text.isNotEmpty && toggleSwitch[0] != 1) {
+      _groupControllersLabour[0]._netWeightController.text =
+          (double.parse(itemWeightController.text).round() -
+                  totalPolyWeight.round())
+              .toString();
+    }
   }
 
   TextEditingController itemNameController = TextEditingController();
@@ -215,7 +460,10 @@ class _ItemFormState extends State<ItemForm> {
   TextEditingController noOfPcController = TextEditingController();
 
   final _formKey = GlobalKey<FormState>();
-  bool isLoad = false, isNoOfPcIsVisible = false, isErrorVisible = false;
+  bool isLoad = false,
+      isNoOfPcIsVisible = false,
+      isErrorVisible = false,
+      isErrorVisibleForLabour = false;
   List<ItemResultModel> allItemData = [];
 
   @override
@@ -327,15 +575,27 @@ class _ItemFormState extends State<ItemForm> {
                         ? getAllPolytheneData(selectedItemDetails.polyWeight!)
                         : null;
 
-                    selectedItemDetails.labourPerKg == null
-                        ? labourControllerPerKg.text = ""
-                        : labourControllerPerKg.text =
-                            selectedItemDetails.labourPerKg.toString();
+                    if (selectedItemDetails.labourPerKg != null) {
+                      toggleSwitch[0] = 0;
+                      _groupControllersLabour[0]._labourInKgController.text =
+                          selectedItemDetails.labourPerKg.toString();
+                    }
 
-                    selectedItemDetails.labourPerPc == null
-                        ? labourControllerPerPc.text = ""
-                        : labourControllerPerPc.text =
-                            selectedItemDetails.labourPerPc.toString();
+                    if (selectedItemDetails.labourPerPc != null) {
+                      onToggleFunction(1, 0);
+                      _groupControllersLabour[0]._labourInKgController.text =
+                          selectedItemDetails.labourPerPc.toString();
+                    }
+
+                    //  selectedItemDetails.labourPerKg == null
+                    //      ? labourControllerPerKg.text = ""
+                    //     : labourControllerPerKg.text =
+                    //         selectedItemDetails.labourPerKg.toString();
+
+                    // selectedItemDetails.labourPerPc == null
+                    //     ? labourControllerPerPc.text = ""
+                    //     : labourControllerPerPc.text =
+                    //         selectedItemDetails.labourPerPc.toString();
 
                     setState(() {
                       selectedItemDetails.labourPerPc != null
@@ -351,21 +611,22 @@ class _ItemFormState extends State<ItemForm> {
                 ),
                 const SizedBox(height: 20),
                 TextFormField(
-                  controller: itemWeightController,
-                  keyboardType: TextInputType.numberWithOptions(decimal: true),
-                  decoration: const InputDecoration(
-                      labelText: "Weight (in gm)",
-                      contentPadding: EdgeInsets.all(15),
-                      border: OutlineInputBorder()),
-                  validator: (value) {
-                    if (value!.isEmpty) {
-                      return "Required";
-                    } else if (double.parse(value) == 0.0) {
-                      return "Weight must be greater than zero";
-                    }
-                    return null;
-                  },
-                ),
+                    controller: itemWeightController,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    decoration: const InputDecoration(
+                        labelText: "Weight (in gm)",
+                        contentPadding: EdgeInsets.all(15),
+                        border: OutlineInputBorder()),
+                    validator: (value) {
+                      if (value!.isEmpty) {
+                        return "Required";
+                      } else if (double.parse(value) == 0.0) {
+                        return "Weight must be greater than zero";
+                      }
+                      return null;
+                    },
+                    onChanged: (value) => {calculateNetWeight()}),
                 const SizedBox(height: 20),
                 RichText(
                   text: TextSpan(
@@ -379,8 +640,10 @@ class _ItemFormState extends State<ItemForm> {
                               child: IntrinsicWidth(
                                 child: TextFormField(
                                   controller: polyNumberControler,
-                                  keyboardType: TextInputType.numberWithOptions(
-                                      decimal: true),
+                                  keyboardType:
+                                      const TextInputType.numberWithOptions(
+                                          decimal: true),
+                                  onChanged: (value) => {calculateNetWeight()},
                                   decoration:
                                       const InputDecoration(isDense: true),
                                   validator: (value) {
@@ -400,19 +663,21 @@ class _ItemFormState extends State<ItemForm> {
                               constraints: const BoxConstraints(minWidth: 75),
                               child: IntrinsicWidth(
                                 child: TextFormField(
-                                  controller: polyWeightController,
-                                  keyboardType: TextInputType.numberWithOptions(
-                                      decimal: true),
-                                  decoration:
-                                      const InputDecoration(isDense: true),
-                                  validator: (value) {
-                                    if (polyNumberControler.text.isNotEmpty &&
-                                        value!.isEmpty) {
-                                      return "Required or remove poly no";
-                                    }
-                                    return null;
-                                  },
-                                ),
+                                    controller: polyWeightController,
+                                    keyboardType:
+                                        const TextInputType.numberWithOptions(
+                                            decimal: true),
+                                    decoration:
+                                        const InputDecoration(isDense: true),
+                                    validator: (value) {
+                                      if (polyNumberControler.text.isNotEmpty &&
+                                          value!.isEmpty) {
+                                        return "Required or remove poly no";
+                                      }
+                                      return null;
+                                    },
+                                    onChanged: (value) =>
+                                        {calculateNetWeight()}),
                               ))),
                     ],
                   ),
@@ -431,8 +696,8 @@ class _ItemFormState extends State<ItemForm> {
                     Expanded(
                       child: TextFormField(
                         controller: itemRateController,
-                        keyboardType:
-                            TextInputType.numberWithOptions(decimal: true),
+                        keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true),
                         decoration: const InputDecoration(
                             labelText: "Item Rate (in %)",
                             contentPadding: EdgeInsets.all(15),
@@ -441,9 +706,6 @@ class _ItemFormState extends State<ItemForm> {
                           if (value!.isEmpty) {
                             return "Required";
                           }
-                          // else if (double.parse(value) < 40.0) {
-                          //   return "Rate must be greater than 40%";
-                          // }
                           return null;
                         },
                       ),
@@ -456,82 +718,96 @@ class _ItemFormState extends State<ItemForm> {
                   ],
                 ),
                 const SizedBox(height: 20),
-                Row(
-                  children: <Widget>[
-                    Expanded(
-                      child: TextFormField(
-                        controller: labourControllerPerKg,
-                        onChanged: (value) => {
-                          setState(() {
-                            isNoOfPcIsVisible = false;
-                          }),
-                          labourControllerPerPc.text.isNotEmpty
-                              ? labourControllerPerPc.text = ""
-                              : null,
-                        },
-                        keyboardType:
-                            TextInputType.numberWithOptions(decimal: true),
-                        decoration: const InputDecoration(
-                            labelText: "Labour (per kg)",
-                            contentPadding: EdgeInsets.all(15),
-                            border: OutlineInputBorder()),
-                        // validator: (value) {
-                        //   if (value!.isEmpty &&
-                        //       labourControllerPerPc.text.isEmpty) {
-                        //     return "Required at least one type of labour charge";
-                        //   }
-                        //   return null;
-                        // },
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: TextFormField(
-                        controller: labourControllerPerPc,
-                        onChanged: (value) => {
-                          setState(() {
-                            isNoOfPcIsVisible = true;
-                          }),
-                          labourControllerPerKg.text.isNotEmpty
-                              ? labourControllerPerKg.text = ""
-                              : null,
-                        },
-                        keyboardType:
-                            TextInputType.numberWithOptions(decimal: true),
-                        decoration: const InputDecoration(
-                            labelText: "Labour (per Pc)",
-                            contentPadding: EdgeInsets.all(15),
-                            border: OutlineInputBorder()),
-                        // validator: (value) {
-                        //   if (value!.isEmpty &&
-                        //       labourControllerPerKg.text.isEmpty) {
-                        //     return "Required at least one type of labour charge";
-                        //   }
-                        //   return null;
-                        // },
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
+                Container(child: _labourListView()),
                 Visibility(
-                  visible: isNoOfPcIsVisible,
-                  child: TextFormField(
-                    controller: noOfPcController,
-                    keyboardType:
-                        TextInputType.numberWithOptions(decimal: true),
-                    decoration: const InputDecoration(
-                        labelText: "No of Piece",
-                        contentPadding: EdgeInsets.all(15),
-                        border: OutlineInputBorder()),
-                    validator: (value) {
-                      if (value!.isEmpty || int.parse(value) == 0) {
-                        return "Required";
-                      }
-                      return null;
-                    },
-                  ),
-                ),
+                    visible: isErrorVisibleForLabour,
+                    child: const Text(
+                      "please fill above labour fields",
+                      style: TextStyle(color: Colors.red),
+                    )),
+                _addTileForLabour(),
+                // Row(
+                //   children: <Widget>[
+                // ToggleSwitch(
+                //   minWidth: 30.0,
+                //   minHeight: 15,
+                //   activeBgColors:const [
+                //     [Colors.blue],
+                //     [Colors.green]
+                //   ],
+                //   activeFgColor: Colors.white,
+                //   inactiveBgColor:const Color.fromARGB(255, 187, 186, 186),
+                //   inactiveFgColor: Colors.white,
+                //   initialLabelIndex: 0,
+                //   totalSwitches: 2,
+                //   labels: const ['LabourInKg', 'LabourInPc'],
+                //   radiusStyle: true,
+                //   onToggle: (index) {
+
+                //   },
+                // ),
+                // const SizedBox(width: 10,),
+                //Container(child: _listView()),
+                // Expanded(
+                //   child: TextFormField(
+                //     controller: labourControllerPerKg,
+                //     onChanged: (value) => {
+                //       setState(() {
+                //         isNoOfPcIsVisible = false;
+                //       }),
+                //       labourControllerPerPc.text.isNotEmpty
+                //           ? labourControllerPerPc.text = ""
+                //           : null,
+                //     },
+                //     keyboardType: const TextInputType.numberWithOptions(
+                //         decimal: true),
+                //     decoration: const InputDecoration(
+                //         labelText: "Labour (per kg)",
+                //         contentPadding: EdgeInsets.all(15),
+                //         border: OutlineInputBorder()),
+                //   ),
+                // ),
+                // const SizedBox(width: 10),
+                // Expanded(
+                //   child: TextFormField(
+                //     controller: labourControllerPerPc,
+                //     onChanged: (value) => {
+                //       setState(() {
+                //         isNoOfPcIsVisible = true;
+                //       }),
+                //       labourControllerPerKg.text.isNotEmpty
+                //           ? labourControllerPerKg.text = ""
+                //           : null,
+                //     },
+                //     keyboardType: const TextInputType.numberWithOptions(
+                //         decimal: true),
+                //     decoration: const InputDecoration(
+                //         labelText: "Labour (per Pc)",
+                //         contentPadding: EdgeInsets.all(15),
+                //         border: OutlineInputBorder()),
+                //   ),
+                // ),
+                // ],
+                //),
+                //const SizedBox(height: 20),
+                // Visibility(
+                //   visible: isNoOfPcIsVisible,
+                //   child: TextFormField(
+                //     controller: noOfPcController,
+                //     keyboardType:
+                //         const TextInputType.numberWithOptions(decimal: true),
+                //     decoration: const InputDecoration(
+                //         labelText: "No of Piece",
+                //         contentPadding: EdgeInsets.all(15),
+                //         border: OutlineInputBorder()),
+                //     validator: (value) {
+                //       if (value!.isEmpty || int.parse(value) == 0) {
+                //         return "Required";
+                //       }
+                //       return null;
+                //     },
+                //   ),
+                // ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -562,7 +838,7 @@ class _ItemFormState extends State<ItemForm> {
                                 double.parse(polyNumberControler.text) *
                                     double.parse(polyWeightController.text);
 
-                            //for poly in string
+                            /********for poly in string**********/
                             polyWeightInString =
                                 "${polyNumberControler.text}@${polyWeightController.text}, ";
                           }
@@ -586,7 +862,7 @@ class _ItemFormState extends State<ItemForm> {
                               polyWeightInString +=
                                   "${_groupControllers[i]._polyNoController.text}@${_groupControllers[i]._polyWtController.text}, ";
                             }
-                          }
+                          } //end
 
                           int totalFineSilver =
                               ((double.parse(itemWeightController.text) -
@@ -596,20 +872,58 @@ class _ItemFormState extends State<ItemForm> {
                                       100)
                                   .round();
 
-                          int labourNet = (labourControllerPerKg.text.isEmpty &&
-                                  labourControllerPerPc.text.isNotEmpty
-                              ? (double.parse(labourControllerPerPc.text) *
-                                      int.parse(noOfPcController.text))
-                                  .round()
-                              : (labourControllerPerKg.text.isEmpty &&
-                                      labourControllerPerPc.text.isEmpty
-                                  ? 0
-                                  : ((double.parse(labourControllerPerKg.text) /
-                                              1000) *
-                                          (double.parse(
-                                                  itemWeightController.text) -
-                                              totalPolyWeight))
-                                      .round()));
+                          double labourNet = 0;
+                          String labourInString = "";
+                          for (int i = 0;
+                              i < _groupControllersLabour.length;
+                              i++) {
+                            if (_groupControllersLabour[i]
+                                    ._netWeightController
+                                    .text
+                                    .isNotEmpty &&
+                                _groupControllersLabour[i]
+                                    ._labourInKgController
+                                    .text
+                                    .isNotEmpty) {
+                              if (toggleSwitch[i] == 1) {
+                                labourNet += (double.parse(
+                                        _groupControllersLabour[i]
+                                            ._netWeightController
+                                            .text) *
+                                    double.parse(_groupControllersLabour[i]
+                                        ._labourInKgController
+                                        .text));
+                                labourInString +=
+                                    "${_groupControllersLabour[i]._netWeightController.text}@${_groupControllersLabour[i]._labourInKgController.text}/pc, ";
+                              } else {
+                                labourNet += (double.parse(
+                                        _groupControllersLabour[i]
+                                            ._netWeightController
+                                            .text) *
+                                    double.parse(_groupControllersLabour[i]
+                                        ._labourInKgController
+                                        .text) /
+                                    1000);
+                                labourInString +=
+                                    "${_groupControllersLabour[i]._netWeightController.text}@${_groupControllersLabour[i]._labourInKgController.text}/kg, ";
+                              }
+                            }
+                          }
+
+                          // labourNet = (labourControllerPerKg.text.isEmpty &&
+                          //         labourControllerPerPc.text.isNotEmpty
+                          //     ? (double.parse(labourControllerPerPc.text) *
+                          //             int.parse(noOfPcController.text))
+                          //         .round()
+                          //     : (labourControllerPerKg.text.isEmpty &&
+                          //             labourControllerPerPc.text.isEmpty
+                          //         ? 0
+                          //         : ((double.parse(labourControllerPerKg.text) /
+                          //                     1000) *
+                          //                 (double.parse(
+                          //                         itemWeightController.text) -
+                          //                     totalPolyWeight))
+                          //             .round()));
 
                           var invoice = InvoiceModel(
                               invoiceId: widget.editItem != null
@@ -637,15 +951,35 @@ class _ItemFormState extends State<ItemForm> {
                                   ? null
                                   : int.parse(noOfPcController.text),
                               fineSilver: totalFineSilver,
-                              labourNet: labourNet);
+                              labourNet: labourNet.round(),
+                              labourInString: labourInString.isEmpty
+                                  ? labourInString
+                                  : labourInString.substring(
+                                      0, labourInString.length - 2));
 
                           var item = ItemModel(
                               itemName:
                                   itemNameController.text.toUpperCase().trim(),
                               wastage: double.parse(
                                   itemRateController.text.toString()),
-                              labourPerKg: invoice.labourPerKg,
-                              labourPerPc: invoice.labourPerPc,
+                              labourPerKg: _groupControllersLabour[0]
+                                          ._labourInKgController
+                                          .text
+                                          .isNotEmpty &&
+                                      toggleSwitch[0] == 0
+                                  ? double.parse(_groupControllersLabour[0]
+                                      ._labourInKgController
+                                      .text)
+                                  : null,
+                              labourPerPc: _groupControllersLabour[0]
+                                          ._labourInKgController
+                                          .text
+                                          .isNotEmpty &&
+                                      toggleSwitch[0] == 1
+                                  ? double.parse(_groupControllersLabour[0]
+                                      ._labourInKgController
+                                      .text)
+                                  : null,
                               polyWeightinGm: polyWeightController.text.isEmpty
                                   ? null
                                   : double.parse(polyWeightController.text),

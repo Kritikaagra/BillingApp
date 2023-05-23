@@ -1,17 +1,17 @@
-import 'package:billing_app/screens/invoice_preview.dart';
-import 'package:billing_app/screens/item_sell_form.dart';
+import 'invoice.dart';
+import 'package:pdf/pdf.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:printing/printing.dart';
 import 'package:provider/provider.dart';
-import 'package:pdf/pdf.dart';
-import '../models/customer_change_notifier.dart';
 import '../models/customer_model.dart';
-import '../models/item_change_notifier.dart';
-import '../models/receivable_change_notifier.dart';
 import '../models/receivable_model.dart';
 import '../models/item_result_model.dart';
-import 'invoice.dart';
+import '../models/item_change_notifier.dart';
+import '../models/customer_change_notifier.dart';
+import '../models/receivable_change_notifier.dart';
+import 'package:billing_app/screens/invoice_preview.dart';
+import 'package:billing_app/screens/item_sell_form.dart';
+import 'package:flutter_typeahead/flutter_typeahead.dart';
 
 // ignore: must_be_immutable
 class ItemPurchaseForm extends StatefulWidget {
@@ -160,7 +160,7 @@ class _ItemPurchaseFormState extends State<ItemPurchaseForm> {
               const SizedBox(height: 20),
               TextFormField(
                 controller: _itemWeightController,
-                keyboardType: TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 decoration: const InputDecoration(
                     labelText: "Net Weight (in gm)",
                     contentPadding: EdgeInsets.all(15),
@@ -180,7 +180,7 @@ class _ItemPurchaseFormState extends State<ItemPurchaseForm> {
                   Expanded(
                     child: TextFormField(
                       controller: _itemRateController,
-                      keyboardType: TextInputType.numberWithOptions(decimal: true),
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
                       decoration: const InputDecoration(
                           labelText: "Item Rate (in %)",
                           contentPadding: EdgeInsets.all(15),
@@ -217,7 +217,7 @@ class _ItemPurchaseFormState extends State<ItemPurchaseForm> {
                             ? _labourControllerPerPc.text = ""
                             : null,
                       },
-                      keyboardType: TextInputType.numberWithOptions(decimal: true),
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
                       decoration: const InputDecoration(
                           labelText: "Labour (per kg)",
                           contentPadding: EdgeInsets.all(15),
@@ -243,7 +243,7 @@ class _ItemPurchaseFormState extends State<ItemPurchaseForm> {
                             ? _labourControllerPerKg.text = ""
                             : null,
                       },
-                      keyboardType: TextInputType.numberWithOptions(decimal: true),
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
                       decoration: const InputDecoration(
                           labelText: "Labour (per Pc)",
                           contentPadding: EdgeInsets.all(15),
@@ -266,7 +266,7 @@ class _ItemPurchaseFormState extends State<ItemPurchaseForm> {
                 visible: isNoOfPcIsVisible,
                 child: TextFormField(
                   controller: _noOfPcController,
-                  keyboardType: TextInputType.numberWithOptions(decimal: true),
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   decoration: const InputDecoration(
                       labelText: "No of Piece",
                       contentPadding: EdgeInsets.all(15),

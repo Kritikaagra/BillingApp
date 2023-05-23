@@ -6,7 +6,8 @@ import 'models/customer_change_notifier.dart';
 import 'models/customer_model.dart';
 import 'models/invoice_change_notifier.dart';
 import 'models/item_change_notifier.dart';
-import 'models/receivable_change_notifier.dart';
+import 'models/receivable_change_notifier.dart'; 
+   
 
 void main() {
   runApp(const MyApp());
@@ -27,7 +28,7 @@ class MyApp extends StatelessWidget {
         child: MaterialApp(
           title: 'Bill Generator',
           debugShowCheckedModeBanner: false,
-          theme: ThemeData(
+          theme: ThemeData( 
             primarySwatch: Colors.blue,
             visualDensity: VisualDensity.adaptivePlatformDensity,
           ),

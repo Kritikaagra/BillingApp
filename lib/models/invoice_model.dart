@@ -1,6 +1,6 @@
 class InvoiceModel {
   int? invoiceId, customerId, noOfPc;
-  String? itemName, polyWeight;
+  String? itemName, polyWeight, labourInString;
   double? itemWeight, polyWeightinGm, itemRate, labourPerKg, labourPerPc;
   int? fineSilver, labourNet;
 
@@ -17,6 +17,7 @@ class InvoiceModel {
     this.noOfPc,
     this.fineSilver,
     this.labourNet,
+    this.labourInString
   });
 
   factory InvoiceModel.fromJson(Map<String, dynamic> json) => InvoiceModel(
@@ -31,7 +32,8 @@ class InvoiceModel {
       labourPerPc: json["labourPerPc"]?.toDouble(),
       noOfPc: json["noOfPc"],
       fineSilver: json["fineSilver"],
-      labourNet: json["labourNet"]);
+      labourNet: json["labourNet"],
+      labourInString: json["labourInString"]);
 
   Map<String, dynamic> toJson() => {
         "invoiceId": invoiceId,
@@ -45,7 +47,8 @@ class InvoiceModel {
         "labourPerPc": labourPerPc,
         "noOfPc": noOfPc,
         "fineSilver": fineSilver,
-        "labourNet": labourNet
+        "labourNet": labourNet,
+        "labourInString": labourInString
       };
 
   copyWith(
@@ -60,7 +63,8 @@ class InvoiceModel {
       double? labourPerPc,
       int? noOfPc,
       int? fineSilver,
-      int? labourNet}) {
+      int? labourNet,
+      String? labourInString}) {
     return InvoiceModel(
         invoiceId: invoiceId ?? this.invoiceId,
         customerId: customerId ?? this.customerId,
@@ -73,6 +77,7 @@ class InvoiceModel {
         labourPerPc: labourPerPc ?? this.labourPerPc,
         noOfPc: noOfPc ?? this.noOfPc,
         fineSilver: fineSilver ?? this.fineSilver,
-        labourNet: labourNet ?? this.labourNet);
+        labourNet: labourNet ?? this.labourNet,
+        labourInString: labourInString ?? this.labourInString);
   }
 }

@@ -49,7 +49,8 @@ class DatabaseService {
   labourPerPc DECIMAL,
   noOfPc INT,
   fineSilver INT NOT NULL,
-  labourNet INT NOT NULL
+  labourNet INT NOT NULL,
+  labourInString TEXT
   )
   ''');
 
