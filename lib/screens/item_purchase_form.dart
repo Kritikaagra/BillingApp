@@ -9,9 +9,10 @@ import '../models/item_result_model.dart';
 import '../models/item_change_notifier.dart';
 import '../models/customer_change_notifier.dart';
 import '../models/receivable_change_notifier.dart';
-import 'package:billing_app/screens/invoice_preview.dart';
 import 'package:billing_app/screens/item_sell_form.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
+
+import 'invoice_receivedPreview.dart';
 
 // ignore: must_be_immutable
 class ItemPurchaseForm extends StatefulWidget {
@@ -356,7 +357,7 @@ class _ItemPurchaseFormState extends State<ItemPurchaseForm> {
                                   context,
                                   MaterialPageRoute(
                                     builder: (BuildContext context) =>
-                                        InvoicePreview(
+                                        InvoiceReceivedPreview(
                                       customer: widget.customer,
                                     ),
                                   ),

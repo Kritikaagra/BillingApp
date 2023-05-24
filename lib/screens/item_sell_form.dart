@@ -1,4 +1,4 @@
-import 'package:billing_app/screens/invoice_preview.dart';
+import 'package:billing_app/screens/invoice_issuedPreview.dart';
 import 'package:billing_app/screens/item_purchase_form.dart';
 import 'package:flutter/material.dart';
 import 'package:toggle_switch/toggle_switch.dart';
@@ -1000,7 +1000,7 @@ class _ItemFormState extends State<ItemForm> {
                                     context,
                                     MaterialPageRoute(
                                       builder: (BuildContext context) =>
-                                          InvoicePreview(
+                                          InvoiceIssuedPreview(
                                         customer: widget.customer,
                                       ),
                                     ),

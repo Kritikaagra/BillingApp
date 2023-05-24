@@ -1,7 +1,6 @@
 import 'dart:typed_data';
 import 'package:billing_app/models/customer_model.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
