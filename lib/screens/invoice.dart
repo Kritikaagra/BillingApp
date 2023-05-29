@@ -12,6 +12,8 @@ List<List<String>>? myNestedListForSell;
 List<List<String>>? myNestedListForReceivableItems;
 DateFormat formatter = DateFormat('dd-MMM-yyyy hh:mm a');
 final formatterNum = NumberFormat('#,##,###.##', 'en_IN');
+RegExp regex = RegExp(r"([-+]?[0-9]*\.?[0-9]+)@([-+]?[0-9]*\.?[0-9]+)/kg");
+RegExp regex1 = RegExp(r"([-+]?[0-9]*\.?[0-9]+)@([-+]?[0-9]*\.?[0-9]+)/pc");
 
 Future<Uint8List> generateInvoice(CustomerModel customer) async {
   //get sell and receivable items
@@ -64,7 +66,7 @@ Future<Uint8List> generateInvoice(CustomerModel customer) async {
 //add row in nesdted list
   myNestedListForSell = invoiceDetails
       .map((e) => [
-            "${e.itemName}\nT${e.itemRate}${e.labourInString!.isEmpty ? "" : '\n${e.labourInString}'}${e.polyWeight!.isEmpty ? "" : '\npp:${e.polyWeight}'}",
+            "${e.itemName}\n${e.itemRate!}${e.labourInString!.isEmpty ? "" : regex.allMatches(e.labourInString!).length == 1 && regex1.allMatches(e.labourInString!).isEmpty ? ', ${double.parse(regex.allMatches(e.labourInString!).elementAt(0).group(2)!).round()}' : regex1.allMatches(e.labourInString!).length == 1 && regex.allMatches(e.labourInString!).isEmpty ? ', ${regex1.allMatches(e.labourInString!).elementAt(0).group(1)}*${double.parse(regex1.allMatches(e.labourInString!).elementAt(0).group(2)!).round()}' : ', ${e.labourInString}'}${e.polyWeight!.isEmpty ? "" : '\n${e.polyWeight}'}",
             e.itemWeight!.round(),
             "${(e.itemWeight!.round() - e.polyWeightinGm!.round())}",
             e.fineSilver,
@@ -81,7 +83,7 @@ Future<Uint8List> generateInvoice(CustomerModel customer) async {
 
   myNestedListForReceivableItems = receivableItems
       .map((e) => [
-            "${e.itemName}\nT${e.itemRate}\n${e.labourPerPc == null && e.labourPerKg == null ? "" : e.labourPerPc == null ? ', ${e.labourPerKg!.round()}/kg' : ', ${e.noOfPc}@${e.labourPerPc!.round()}p'}",
+            "${e.itemName}\n${e.itemRate}\n${e.labourPerPc == null && e.labourPerKg == null ? "" : e.labourPerPc == null ? ', ${e.labourPerKg!.round()}' : ', ${e.noOfPc}@${e.labourPerPc!.round()}'}",
             e.itemWeight!.round(),
             e.itemWeight!.round(),
             e.fineSilver,
@@ -173,7 +175,7 @@ pw.Widget _contentIssueTable(
     'F',
     'L',
   ];
-  
+
   pw.Table issuedTable = pw.Table.fromTextArray(
       border: const pw.TableBorder(
         verticalInside: pw.BorderSide(

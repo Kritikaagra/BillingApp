@@ -76,9 +76,9 @@ class _ItemFormState extends State<ItemForm> {
     RegExp regex = RegExp(r"([-+]?[0-9]*\.?[0-9]+)@([-+]?[0-9]*\.?[0-9]+)/kg");
     Iterable<RegExpMatch> matches = regex.allMatches(labourDetails);
 
-    for (int i = 0 ; i < matches.length; i++) {
+    for (int i = 0; i < matches.length; i++) {
       RegExpMatch match = matches.elementAt(i);
-      if(i>0) _addTilesForLabour();
+      if (i > 0) _addTilesForLabour();
       _groupControllersLabour[i]._netWeightController.text = match.group(1)!;
       _groupControllersLabour[i]._labourInKgController.text = match.group(2)!;
     }
@@ -87,12 +87,13 @@ class _ItemFormState extends State<ItemForm> {
     Iterable<RegExpMatch> matches1 = regex1.allMatches(labourDetails);
 
     for (int i = 0; i < matches1.length; i++) {
-      RegExpMatch match = matches1.elementAt(i); 
-      if(matches.length+i > 0) _addTilesForLabour();
+      RegExpMatch match = matches1.elementAt(i);
+      if (matches.length + i > 0) _addTilesForLabour();
       onToggleFunction(1, matches.length + i);
-      _groupControllersLabour[matches.length + i]._netWeightController.text = match.group(1)!;
-      _groupControllersLabour[matches.length + i]._labourInKgController.text = match.group(2)!;
-      
+      _groupControllersLabour[matches.length + i]._netWeightController.text =
+          match.group(1)!;
+      _groupControllersLabour[matches.length + i]._labourInKgController.text =
+          match.group(2)!;
     }
   }
 
@@ -139,8 +140,6 @@ class _ItemFormState extends State<ItemForm> {
         isNoOfPcIsVisible = true;
       }
     }
-
-    
   }
 
   void _addTileOnPressedFunction() {
@@ -571,9 +570,13 @@ class _ItemFormState extends State<ItemForm> {
                     itemRateController.text =
                         selectedItemDetails.wastage!.toString();
 
-                    selectedItemDetails.polyWeight!.isNotEmpty
-                        ? getAllPolytheneData(selectedItemDetails.polyWeight!)
-                        : null;
+                    // selectedItemDetails.polyWeight!.isNotEmpty
+                    //     ? getAllPolytheneData(selectedItemDetails.polyWeight!)
+                    //     : null;
+                    selectedItemDetails.polyWeightinGm == null
+                        ? null
+                        : polyWeightController.text =
+                            selectedItemDetails.polyWeightinGm!.toString();
 
                     if (selectedItemDetails.labourPerKg != null) {
                       toggleSwitch[0] = 0;
@@ -891,21 +894,23 @@ class _ItemFormState extends State<ItemForm> {
                                             ._netWeightController
                                             .text) *
                                     double.parse(_groupControllersLabour[i]
-                                        ._labourInKgController
-                                        .text));
+                                            ._labourInKgController
+                                            .text)
+                                        .round());
                                 labourInString +=
-                                    "${_groupControllersLabour[i]._netWeightController.text}@${_groupControllersLabour[i]._labourInKgController.text}/pc, ";
+                                    "${_groupControllersLabour[i]._netWeightController.text}@${double.parse(_groupControllersLabour[i]._labourInKgController.text).round()}/pc, ";
                               } else {
                                 labourNet += (double.parse(
                                         _groupControllersLabour[i]
                                             ._netWeightController
                                             .text) *
                                     double.parse(_groupControllersLabour[i]
-                                        ._labourInKgController
-                                        .text) /
+                                            ._labourInKgController
+                                            .text)
+                                        .round() /
                                     1000);
                                 labourInString +=
-                                    "${_groupControllersLabour[i]._netWeightController.text}@${_groupControllersLabour[i]._labourInKgController.text}/kg, ";
+                                    "${_groupControllersLabour[i]._netWeightController.text}@${double.parse(_groupControllersLabour[i]._labourInKgController.text).round()}/kg, ";
                               }
                             }
                           }
@@ -962,27 +967,34 @@ class _ItemFormState extends State<ItemForm> {
                                   itemNameController.text.toUpperCase().trim(),
                               wastage: double.parse(
                                   itemRateController.text.toString()),
-                              labourPerKg: _groupControllersLabour[0]
+                              labourPerKg:
+                                  _groupControllersLabour[_groupControllersLabour.length - 1]
+                                              ._labourInKgController
+                                              .text
+                                              .isNotEmpty &&
+                                          toggleSwitch[_groupControllersLabour.length - 1] ==
+                                              0
+                                      ? double.parse(
+                                          _groupControllersLabour[_groupControllersLabour.length - 1]
+                                              ._labourInKgController
+                                              .text)
+                                      : null,
+                              labourPerPc: _groupControllersLabour[
+                                              _groupControllersLabour.length - 1]
                                           ._labourInKgController
                                           .text
                                           .isNotEmpty &&
-                                      toggleSwitch[0] == 0
-                                  ? double.parse(_groupControllersLabour[0]
-                                      ._labourInKgController
-                                      .text)
+                                      toggleSwitch[_groupControllersLabour.length - 1] == 1
+                                  ? double.parse(_groupControllersLabour[_groupControllersLabour.length - 1]._labourInKgController.text)
                                   : null,
-                              labourPerPc: _groupControllersLabour[0]
-                                          ._labourInKgController
-                                          .text
-                                          .isNotEmpty &&
-                                      toggleSwitch[0] == 1
-                                  ? double.parse(_groupControllersLabour[0]
-                                      ._labourInKgController
-                                      .text)
-                                  : null,
-                              polyWeightinGm: polyWeightController.text.isEmpty
-                                  ? null
-                                  : double.parse(polyWeightController.text),
+                              // polyWeightinGm: polyWeightController.text.isEmpty
+                              //     ? null
+                              //     : double.parse(polyWeightController.text),
+                              polyWeightinGm: _groupControllers.isNotEmpty
+                                  ? double.parse(_groupControllers[_groupControllers.length - 1]._polyWtController.text)
+                                  : polyWeightController.text.isNotEmpty
+                                      ? double.parse(polyWeightController.text)
+                                      : null,
                               polyWeight: invoice.polyWeight);
 
                           widget.editItem != null
