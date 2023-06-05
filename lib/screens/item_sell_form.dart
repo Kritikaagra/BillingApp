@@ -570,9 +570,6 @@ class _ItemFormState extends State<ItemForm> {
                     itemRateController.text =
                         selectedItemDetails.wastage!.toString();
 
-                    // selectedItemDetails.polyWeight!.isNotEmpty
-                    //     ? getAllPolytheneData(selectedItemDetails.polyWeight!)
-                    //     : null;
                     selectedItemDetails.polyWeightinGm == null
                         ? null
                         : polyWeightController.text =
@@ -589,16 +586,6 @@ class _ItemFormState extends State<ItemForm> {
                       _groupControllersLabour[0]._labourInKgController.text =
                           selectedItemDetails.labourPerPc.toString();
                     }
-
-                    //  selectedItemDetails.labourPerKg == null
-                    //      ? labourControllerPerKg.text = ""
-                    //     : labourControllerPerKg.text =
-                    //         selectedItemDetails.labourPerKg.toString();
-
-                    // selectedItemDetails.labourPerPc == null
-                    //     ? labourControllerPerPc.text = ""
-                    //     : labourControllerPerPc.text =
-                    //         selectedItemDetails.labourPerPc.toString();
 
                     setState(() {
                       selectedItemDetails.labourPerPc != null
@@ -729,88 +716,7 @@ class _ItemFormState extends State<ItemForm> {
                       style: TextStyle(color: Colors.red),
                     )),
                 _addTileForLabour(),
-                // Row(
-                //   children: <Widget>[
-                // ToggleSwitch(
-                //   minWidth: 30.0,
-                //   minHeight: 15,
-                //   activeBgColors:const [
-                //     [Colors.blue],
-                //     [Colors.green]
-                //   ],
-                //   activeFgColor: Colors.white,
-                //   inactiveBgColor:const Color.fromARGB(255, 187, 186, 186),
-                //   inactiveFgColor: Colors.white,
-                //   initialLabelIndex: 0,
-                //   totalSwitches: 2,
-                //   labels: const ['LabourInKg', 'LabourInPc'],
-                //   radiusStyle: true,
-                //   onToggle: (index) {
 
-                //   },
-                // ),
-                // const SizedBox(width: 10,),
-                //Container(child: _listView()),
-                // Expanded(
-                //   child: TextFormField(
-                //     controller: labourControllerPerKg,
-                //     onChanged: (value) => {
-                //       setState(() {
-                //         isNoOfPcIsVisible = false;
-                //       }),
-                //       labourControllerPerPc.text.isNotEmpty
-                //           ? labourControllerPerPc.text = ""
-                //           : null,
-                //     },
-                //     keyboardType: const TextInputType.numberWithOptions(
-                //         decimal: true),
-                //     decoration: const InputDecoration(
-                //         labelText: "Labour (per kg)",
-                //         contentPadding: EdgeInsets.all(15),
-                //         border: OutlineInputBorder()),
-                //   ),
-                // ),
-                // const SizedBox(width: 10),
-                // Expanded(
-                //   child: TextFormField(
-                //     controller: labourControllerPerPc,
-                //     onChanged: (value) => {
-                //       setState(() {
-                //         isNoOfPcIsVisible = true;
-                //       }),
-                //       labourControllerPerKg.text.isNotEmpty
-                //           ? labourControllerPerKg.text = ""
-                //           : null,
-                //     },
-                //     keyboardType: const TextInputType.numberWithOptions(
-                //         decimal: true),
-                //     decoration: const InputDecoration(
-                //         labelText: "Labour (per Pc)",
-                //         contentPadding: EdgeInsets.all(15),
-                //         border: OutlineInputBorder()),
-                //   ),
-                // ),
-                // ],
-                //),
-                //const SizedBox(height: 20),
-                // Visibility(
-                //   visible: isNoOfPcIsVisible,
-                //   child: TextFormField(
-                //     controller: noOfPcController,
-                //     keyboardType:
-                //         const TextInputType.numberWithOptions(decimal: true),
-                //     decoration: const InputDecoration(
-                //         labelText: "No of Piece",
-                //         contentPadding: EdgeInsets.all(15),
-                //         border: OutlineInputBorder()),
-                //     validator: (value) {
-                //       if (value!.isEmpty || int.parse(value) == 0) {
-                //         return "Required";
-                //       }
-                //       return null;
-                //     },
-                //   ),
-                // ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -895,8 +801,7 @@ class _ItemFormState extends State<ItemForm> {
                                             .text) *
                                     double.parse(_groupControllersLabour[i]
                                             ._labourInKgController
-                                            .text)
-                                        .round());
+                                            .text));
                                 labourInString +=
                                     "${_groupControllersLabour[i]._netWeightController.text}@${double.parse(_groupControllersLabour[i]._labourInKgController.text).round()}/pc, ";
                               } else {
@@ -906,29 +811,13 @@ class _ItemFormState extends State<ItemForm> {
                                             .text) *
                                     double.parse(_groupControllersLabour[i]
                                             ._labourInKgController
-                                            .text)
-                                        .round() /
+                                            .text)/
                                     1000);
                                 labourInString +=
                                     "${_groupControllersLabour[i]._netWeightController.text}@${double.parse(_groupControllersLabour[i]._labourInKgController.text).round()}/kg, ";
                               }
                             }
                           }
-
-                          // labourNet = (labourControllerPerKg.text.isEmpty &&
-                          //         labourControllerPerPc.text.isNotEmpty
-                          //     ? (double.parse(labourControllerPerPc.text) *
-                          //             int.parse(noOfPcController.text))
-                          //         .round()
-                          //     : (labourControllerPerKg.text.isEmpty &&
-                          //             labourControllerPerPc.text.isEmpty
-                          //         ? 0
-                          //         : ((double.parse(labourControllerPerKg.text) /
-                          //                     1000) *
-                          //                 (double.parse(
-                          //                         itemWeightController.text) -
-                          //                     totalPolyWeight))
-                          //             .round()));
 
                           var invoice = InvoiceModel(
                               invoiceId: widget.editItem != null
@@ -987,9 +876,7 @@ class _ItemFormState extends State<ItemForm> {
                                       toggleSwitch[_groupControllersLabour.length - 1] == 1
                                   ? double.parse(_groupControllersLabour[_groupControllersLabour.length - 1]._labourInKgController.text)
                                   : null,
-                              // polyWeightinGm: polyWeightController.text.isEmpty
-                              //     ? null
-                              //     : double.parse(polyWeightController.text),
+
                               polyWeightinGm: _groupControllers.isNotEmpty
                                   ? double.parse(_groupControllers[_groupControllers.length - 1]._polyWtController.text)
                                   : polyWeightController.text.isNotEmpty
